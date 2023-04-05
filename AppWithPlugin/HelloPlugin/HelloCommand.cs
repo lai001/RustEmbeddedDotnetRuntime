@@ -1,4 +1,4 @@
-﻿using PluginBase;
+using PluginBase;
 using System;
 
 namespace HelloPlugin

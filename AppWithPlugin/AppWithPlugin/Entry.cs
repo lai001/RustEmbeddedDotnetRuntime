@@ -6,18 +6,60 @@ namespace AppWithPlugin
 {
     public static unsafe class Entry
     {
+        private static Action sourceFileChangedHandle;
+
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-        public static void Main(IntPtr argsPtr, int length, NativeStudentFuncPtr funcPtr)
+        public static void Main(NativeEntryInfo nativeEntryInfo)
         {
-            string[] args = new string[length];
-            for (int i = 0; i < length; i++)
+            string[] args = new string[nativeEntryInfo.argsLength];
+            for (int i = 0; i < nativeEntryInfo.argsLength; i++)
             {
-                args[i] = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(IntPtr.Add(argsPtr, i * IntPtr.Size)));
+                args[i] = Marshal.PtrToStringUTF8(Marshal.ReadIntPtr(IntPtr.Add(nativeEntryInfo.argsPtr, i * IntPtr.Size)));
             }
 
-            NativeStudent.Init(funcPtr);
+            NativeStudent.Init(nativeEntryInfo.nativeStudentFuncPtr);
+
+            nativeEntryInfo.nativeFileWatchSetFunc(&FileDidChanged);
+
             Program.Main(args);
         }
+
+        [UnmanagedCallersOnly]
+        private static unsafe void FileDidChanged()
+        {
+            if (sourceFileChangedHandle != null)
+            {
+                lock (sourceFileChangedHandle)
+                {
+                    sourceFileChangedHandle();
+                }
+            }
+        }
+
+        public static void SetSourceFileChangedListenter(Action action)
+        {
+            if (sourceFileChangedHandle == null)
+            {
+                sourceFileChangedHandle += action;
+            }
+            else
+            {
+                lock (sourceFileChangedHandle)
+                {
+                    sourceFileChangedHandle += action;
+                }
+            }
+        }
+
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct NativeEntryInfo
+    {
+        public delegate* unmanaged<delegate* unmanaged<void>, void> nativeFileWatchSetFunc;
+        public IntPtr argsPtr;
+        public int argsLength;
+        public NativeStudentFuncPtr nativeStudentFuncPtr;
     }
 
     [StructLayout(LayoutKind.Sequential)]

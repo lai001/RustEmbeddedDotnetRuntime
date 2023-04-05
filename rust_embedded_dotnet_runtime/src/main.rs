@@ -1,12 +1,16 @@
 extern crate libc;
+use notify::RecursiveMode;
+use notify_debouncer_mini::new_debouncer;
 use rust_embedded_dotnet_runtime::{
     dotnet::{
         get_dotnet_load_assembly, load_hostfxr_library, to_wstring,
         LoadAssemblyAndGetFunctionPointerFn,
     },
-    student_func_ptr::{EntryPointFn, StudentFuncPtr},
+    entry_info::{EntryInfo, EntryPointFn},
+    file::{nativeFileWatchSet, FileChangedFunc, GLOBAL_FILE_WATCH},
+    student_func_ptr::StudentFuncPtr,
 };
-use std::ffi::CString;
+use std::{ffi::CString, path::Path, time::Duration};
 
 fn main() {
     if let Ok(path) = std::env::current_dir() {
@@ -14,6 +18,30 @@ fn main() {
         if path.ends_with("debug") == false {
             std::env::set_current_dir("./target/debug").unwrap();
         }
+    }
+
+    {
+        std::thread::spawn(|| {
+            let (tx, rx) = std::sync::mpsc::channel();
+            let mut debouncer = new_debouncer(Duration::from_millis(200), None, tx).unwrap();
+            debouncer
+                .watcher()
+                .watch(
+                    Path::new("../../../AppWithPlugin/HelloPlugin"),
+                    RecursiveMode::NonRecursive,
+                )
+                .unwrap();
+            for events in rx {
+                let file_changed_func = GLOBAL_FILE_WATCH.lock().unwrap().file_changed_func;
+                if file_changed_func.is_null() == false {
+                    unsafe {
+                        let file_changed_func: FileChangedFunc =
+                            std::mem::transmute(file_changed_func);
+                        file_changed_func();
+                    };
+                }
+            }
+        });
     }
 
     let args: Vec<String> = std::env::args().collect();
@@ -58,6 +86,12 @@ fn main() {
         let student_func_ptr = StudentFuncPtr::new();
         let entry_point_func: EntryPointFn = std::mem::transmute(entry_point_func);
 
-        entry_point_func(c_args.as_ptr(), c_args.len() as i32, student_func_ptr);
+        let entry_info = EntryInfo {
+            file_watch_set_func_ptr: nativeFileWatchSet as *const libc::c_void,
+            args: c_args.as_ptr(),
+            args_length: c_args.len() as i32,
+            student_func_ptr,
+        };
+        entry_point_func(entry_info);
     }
 }

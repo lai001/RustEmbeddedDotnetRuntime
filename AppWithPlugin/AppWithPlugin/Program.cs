@@ -9,12 +9,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace AppWithPlugin
 {
     public static unsafe class Program
     {
         static PluginLoadContext loadContext = null;
+
+        private static List<Action> pendingTasks = new();
 
         public static void Main(string[] args)
         {
@@ -24,7 +27,18 @@ namespace AppWithPlugin
             //{
             //    Thread.Sleep(3000);
             //}
-
+            Entry.SetSourceFileChangedListenter(delegate ()
+            {
+                lock (pendingTasks)
+                {
+                    pendingTasks.Add(delegate ()
+                    {
+                        UnloadAssembly();
+                        BuildAssembly();
+                        LoadAssembly();
+                    });
+                }
+            });
             Console.WriteLine($"CurrentDirectory: {Directory.GetCurrentDirectory()}");
 
             string[] commandLineArgs = Environment.GetCommandLineArgs();
@@ -42,33 +56,15 @@ namespace AppWithPlugin
 
             while (true)
             {
-                string line = Console.ReadLine();
-
-                if (line == null)
+                lock (pendingTasks)
                 {
-                    break;
+                    foreach (Action pendingTask in pendingTasks)
+                    {
+                        pendingTask();
+                    }
+                    pendingTasks.Clear();
                 }
-                else
-                {
-                    if (line == "quit")
-                    {
-                        break;
-                    }
-                    else if (line == "load")
-                    {
-                        LoadAssembly();
-                    }
-                    else if (line == "unload")
-                    {
-                        UnloadAssembly();
-                    }
-                    else if (line == "reload")
-                    {
-                        UnloadAssembly();
-                        BuildAssembly();
-                        LoadAssembly();
-                    }
-                }
+                Thread.Sleep((int)(1.0 / 60.0 * 1000.0));
             }
         }
 

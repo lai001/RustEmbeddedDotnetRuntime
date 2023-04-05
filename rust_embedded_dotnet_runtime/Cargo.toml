@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 libc = "0.2.33"
 lazy_static = "1.4.0"
+notify = "5.1.0"
+notify-debouncer-mini = { version = "0.2.0" }

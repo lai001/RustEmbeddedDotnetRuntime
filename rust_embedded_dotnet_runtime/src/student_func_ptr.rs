@@ -5,12 +5,12 @@ use crate::student::{
 
 #[derive(Debug)]
 pub struct StudentFuncPtr {
-    native_student_new: *mut libc::c_void,
-    native_student_delete: *mut libc::c_void,
-    native_student_set_id: *mut libc::c_void,
-    native_student_get_id: *mut libc::c_void,
-    native_student_set_tag: *mut libc::c_void,
-    native_student_get_tag: *mut libc::c_void,
+    pub native_student_new: *mut libc::c_void,
+    pub native_student_delete: *mut libc::c_void,
+    pub native_student_set_id: *mut libc::c_void,
+    pub native_student_get_id: *mut libc::c_void,
+    pub native_student_set_tag: *mut libc::c_void,
+    pub native_student_get_tag: *mut libc::c_void,
 }
 
 impl StudentFuncPtr {
@@ -25,9 +25,3 @@ impl StudentFuncPtr {
         }
     }
 }
-
-pub type EntryPointFn = unsafe extern "stdcall" fn(
-    args: *const *const u8,
-    length: i32,
-    student_func_ptr: StudentFuncPtr,
-);
