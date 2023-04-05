@@ -18,6 +18,7 @@ namespace AppWithPlugin
         static PluginLoadContext loadContext = null;
 
         private static List<Action> pendingTasks = new();
+        private static readonly object pendingTasksLock = new();
 
         public static void Main(string[] args)
         {
@@ -29,7 +30,7 @@ namespace AppWithPlugin
             //}
             Entry.SetSourceFileChangedListenter(delegate ()
             {
-                lock (pendingTasks)
+                lock (pendingTasksLock)
                 {
                     pendingTasks.Add(delegate ()
                     {
@@ -56,7 +57,7 @@ namespace AppWithPlugin
 
             while (true)
             {
-                lock (pendingTasks)
+                lock (pendingTasksLock)
                 {
                     foreach (Action pendingTask in pendingTasks)
                     {

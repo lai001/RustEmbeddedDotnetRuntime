@@ -7,6 +7,7 @@ namespace AppWithPlugin
     public static unsafe class Entry
     {
         private static Action sourceFileChangedHandle;
+        private static readonly object sourceFileChangedHandleLock = new();
 
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
         public static void Main(NativeEntryInfo nativeEntryInfo)
@@ -27,9 +28,9 @@ namespace AppWithPlugin
         [UnmanagedCallersOnly]
         private static unsafe void FileDidChanged()
         {
-            if (sourceFileChangedHandle != null)
+            lock (sourceFileChangedHandleLock)
             {
-                lock (sourceFileChangedHandle)
+                if (sourceFileChangedHandle != null)
                 {
                     sourceFileChangedHandle();
                 }
@@ -38,16 +39,9 @@ namespace AppWithPlugin
 
         public static void SetSourceFileChangedListenter(Action action)
         {
-            if (sourceFileChangedHandle == null)
+            lock (sourceFileChangedHandleLock)
             {
                 sourceFileChangedHandle += action;
-            }
-            else
-            {
-                lock (sourceFileChangedHandle)
-                {
-                    sourceFileChangedHandle += action;
-                }
             }
         }
 
