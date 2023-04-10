@@ -10,16 +10,47 @@ use rust_embedded_dotnet_runtime::{
     file::{nativeFileWatchSet, FileChangedFunc, GLOBAL_FILE_WATCH},
     student_func_ptr::StudentFuncPtr,
 };
-use std::{ffi::CString, path::Path, time::Duration};
+use std::{
+    ffi::CString,
+    path::Path,
+    time::{Duration, SystemTime},
+};
+
+fn fib(n: i32) -> i32 {
+    if n <= 0 {
+        return 0;
+    }
+    if n < 3 {
+        return 1;
+    }
+    return fib(n - 1) + fib(n - 2);
+}
+
+fn test() {
+    let current = SystemTime::now();
+    for i in 0..45 {
+        fib(i);
+    }
+    let duration = SystemTime::now()
+        .duration_since(current)
+        .unwrap()
+        .as_millis();
+    println!("{duration}");
+}
 
 fn main() {
-    if let Ok(path) = std::env::current_dir() {
-        println!("current_dir: {:?}", path);
-        if path.ends_with("debug") == false {
-            std::env::set_current_dir("./target/debug").unwrap();
+    if let (Ok(current_dir), Ok(current_exe)) = (std::env::current_dir(), std::env::current_exe()) {
+        let current_exe_dir = std::path::Path::new(&current_exe)
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap();
+        let current_dir = current_dir.to_str().unwrap();
+        if current_dir != current_exe_dir {
+            std::env::set_current_dir(current_exe_dir).unwrap();
         }
     }
-
+    test();
     {
         std::thread::spawn(|| {
             let (tx, rx) = std::sync::mpsc::channel();
@@ -31,7 +62,7 @@ fn main() {
                     RecursiveMode::NonRecursive,
                 )
                 .unwrap();
-            for events in rx {
+            for _ in rx {
                 let file_changed_func = GLOBAL_FILE_WATCH.lock().unwrap().file_changed_func;
                 if file_changed_func.is_null() == false {
                     unsafe {

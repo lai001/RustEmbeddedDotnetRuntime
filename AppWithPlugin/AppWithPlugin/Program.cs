@@ -17,8 +17,7 @@ namespace AppWithPlugin
     {
         static PluginLoadContext loadContext = null;
 
-        private static List<Action> pendingTasks = new();
-        private static readonly object pendingTasksLock = new();
+        private static readonly Locker<List<Action>> pendingTasks = new(new List<Action>());
 
         public static void Main(string[] args)
         {
@@ -30,17 +29,17 @@ namespace AppWithPlugin
             //}
             Entry.SetSourceFileChangedListenter(delegate ()
             {
-                lock (pendingTasksLock)
-                {
+                pendingTasks.Write(delegate (ref List<Action> pendingTasks) {
                     pendingTasks.Add(delegate ()
                     {
                         UnloadAssembly();
-                        BuildAssembly();
-                        LoadAssembly();
+                        if (BuildAssembly())
+                        {
+                            LoadAssembly();
+                        }
                     });
-                }
+                });
             });
-            Console.WriteLine($"CurrentDirectory: {Directory.GetCurrentDirectory()}");
 
             string[] commandLineArgs = Environment.GetCommandLineArgs();
             for (int i = 0; i < commandLineArgs.Length; i++)
@@ -55,16 +54,17 @@ namespace AppWithPlugin
             }
             MSBuildLocator.RegisterDefaults();
 
+            LoadAssembly();
             while (true)
             {
-                lock (pendingTasksLock)
+                pendingTasks.Write(delegate (ref List<Action> pendingTasks)
                 {
                     foreach (Action pendingTask in pendingTasks)
                     {
                         pendingTask();
                     }
                     pendingTasks.Clear();
-                }
+                });
                 Thread.Sleep((int)(1.0 / 60.0 * 1000.0));
             }
         }
@@ -135,17 +135,23 @@ namespace AppWithPlugin
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void BuildAssembly()
+        private static bool BuildAssembly()
         {
+#if DEBUG
+    string buildType = "Debug";
+#else
+    string buildType = "Release";
+#endif
             BuildManager.DefaultBuildManager.ResetCaches();
             string path = @"../../../AppWithPlugin/HelloPlugin/HelloPlugin.csproj";
             ProjectCollection projectCollection = new();
             BuildParameters buildParameters = new(projectCollection);
             BuildRequestData buildRequestData = new(path, new Dictionary<string, string>
             {
-                { "Configuration", "Debug" }
+                { "Configuration", buildType }
             }, null, new[] { "Build" }, null);
-            BuildManager.DefaultBuildManager.Build(buildParameters, buildRequestData);
+            BuildResult buildResult = BuildManager.DefaultBuildManager.Build(buildParameters, buildRequestData);
+            return buildResult.OverallResult == BuildResultCode.Success;
         }
 
         private static List<NativeStudent> GetStudents(int number)
