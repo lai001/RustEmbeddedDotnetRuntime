@@ -11,21 +11,21 @@ task("project_setup")
                 os.execv(program, argv)
             end            
         end
-
-        if os.exists(".xmake/dotnet-sdk-5.0.408-win-x64.zip") == false then
+        local dotnetSDKFilename = "dotnet-sdk-5.0.408-win-x64.zip"
+        if os.exists(".xmake/" .. dotnetSDKFilename) == false then
             local link = "https://download.visualstudio.microsoft.com/download/pr/57776397-c87d-4eb8-9080-d58d180ccbe6/920afd9e178bdcd10fcfe696c1fdb88c/dotnet-sdk-5.0.408-win-x64.zip"
-            http.download(link, ".xmake/dotnet-sdk-5.0.408-win-x64.zip")
+            http.download(link, ".xmake/" .. dotnetSDKFilename)
         end
-        if os.exists(".xmake/dotnet_runtime") == false and os.exists(".xmake/dotnet-sdk-5.0.408-win-x64.zip") then
-            archive.extract(".xmake/dotnet-sdk-5.0.408-win-x64.zip", ".xmake/dotnet_runtime")
+        if os.exists(".xmake/dotnetSDK") == false and os.exists(".xmake/" .. dotnetSDKFilename) then
+            archive.extract(".xmake/" .. dotnetSDKFilename, ".xmake/dotnetSDK")
         end
 
         local function setup(buildType) 
+            local nethost = ".xmake/dotnetSDK/packs/Microsoft.NETCore.App.Host.win-x64/5.0.17/runtimes/win-x64/native/nethost"
+            local target_nethost = "rust_embedded_dotnet_runtime/target/" .. buildType .. "/nethost"
             os.mkdir("rust_embedded_dotnet_runtime/target/" .. buildType)
-            os.cp(".xmake/dotnet_runtime/packs/Microsoft.NETCore.App.Host.win-x64/5.0.17/runtimes/win-x64/native/nethost.dll", 
-                "rust_embedded_dotnet_runtime/target/" .. buildType .. "/nethost.dll")
-            os.cp(".xmake/dotnet_runtime/packs/Microsoft.NETCore.App.Host.win-x64/5.0.17/runtimes/win-x64/native/nethost.lib", 
-                "rust_embedded_dotnet_runtime/target/" .. buildType .. "/nethost.lib")                
+            os.cp(nethost .. ".dll", target_nethost .. ".dll")
+            os.cp(nethost .. ".dll", target_nethost .. ".lib")
         end
         setup("debug")
         setup("release")

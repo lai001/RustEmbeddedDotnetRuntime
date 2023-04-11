@@ -1,6 +1,8 @@
 ﻿using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Locator;
+using Microsoft.Build.Logging;
 using PluginBase;
 using System;
 using System.Collections.Generic;
@@ -27,18 +29,30 @@ namespace AppWithPlugin
             //{
             //    Thread.Sleep(3000);
             //}
-            Entry.SetSourceFileChangedListenter(delegate ()
+            Action add = delegate ()
             {
-                pendingTasks.Write(delegate (ref List<Action> pendingTasks) {
+                pendingTasks.Write(delegate (ref List<Action> pendingTasks)
+                {
                     pendingTasks.Add(delegate ()
                     {
-                        UnloadAssembly();
-                        if (BuildAssembly())
+                        Action action = BuildAssembly();
+                        if (action != null)
                         {
+                            UnloadAssembly();
+                            action();
                             LoadAssembly();
                         }
                     });
                 });
+            };
+            object @lock = new();
+            Action debouncedWrapper = add.Debounce();
+            Entry.SetSourceFileChangedListenter(delegate ()
+            {
+                lock (@lock)
+                {
+                    debouncedWrapper();
+                }
             });
 
             string[] commandLineArgs = Environment.GetCommandLineArgs();
@@ -135,23 +149,42 @@ namespace AppWithPlugin
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static bool BuildAssembly()
+        private static Action BuildAssembly()
         {
 #if DEBUG
-    string buildType = "Debug";
+            string buildType = "Debug";
 #else
-    string buildType = "Release";
+            string buildType = "Release";
 #endif
             BuildManager.DefaultBuildManager.ResetCaches();
             string path = @"../../../AppWithPlugin/HelloPlugin/HelloPlugin.csproj";
             ProjectCollection projectCollection = new();
             BuildParameters buildParameters = new(projectCollection);
-            BuildRequestData buildRequestData = new(path, new Dictionary<string, string>
-            {
-                { "Configuration", buildType }
-            }, null, new[] { "Build" }, null);
+            buildParameters.Loggers = new[] {
+                new ConsoleLogger
+                {
+                    Verbosity = LoggerVerbosity.Quiet,
+                    ShowSummary = false,
+                    SkipProjectStartedText = true
+                }
+            };
+            Dictionary<string, string> globalProperty = new Dictionary<string, string>();
+            globalProperty.Add("Configuration", buildType);
+            globalProperty.Add("Platform", "Any CPU");
+            globalProperty.Add("OutputPath", Path.Join(Directory.GetCurrentDirectory(), "tmp"));
+            BuildRequestData buildRequestData = new(path, globalProperty, null, new[] { "Build" }, null);
             BuildResult buildResult = BuildManager.DefaultBuildManager.Build(buildParameters, buildRequestData);
-            return buildResult.OverallResult == BuildResultCode.Success;
+            if (buildResult.OverallResult == BuildResultCode.Success)
+            {
+                return delegate ()
+                {
+                    File.Move(Path.Join(Directory.GetCurrentDirectory(), "tmp", "HelloPlugin.dll"), Path.Join(Directory.GetCurrentDirectory(), "HelloPlugin.dll"), true);
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private static List<NativeStudent> GetStudents(int number)
