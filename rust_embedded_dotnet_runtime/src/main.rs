@@ -2,12 +2,9 @@ extern crate libc;
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 use rust_embedded_dotnet_runtime::{
-    dotnet::{
-        get_dotnet_load_assembly, load_hostfxr_library, to_wstring,
-        LoadAssemblyAndGetFunctionPointerFn,
-    },
     entry_info::{EntryInfo, EntryPointFn},
     file::{nativeFileWatchSet, FileChangedFunc, GLOBAL_FILE_WATCH},
+    platform::dotnet::{get_entry_point_func, load_hostfxr_library},
     student_func_ptr::StudentFuncPtr,
 };
 use std::{
@@ -92,28 +89,8 @@ fn main() {
         panic!();
     }
 
-    let config_path = "./AppWithPlugin.runtimeconfig.json".to_string();
-
-    let load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path);
+    let entry_point_func = get_entry_point_func();
     unsafe {
-        let load_assembly_and_get_function_pointer: LoadAssemblyAndGetFunctionPointerFn =
-            std::mem::transmute(load_assembly_and_get_function_pointer);
-        let mut entry_point_func: *mut libc::c_void = std::ptr::null_mut();
-        const UNMANAGEDCALLERSONLY_METHOD: *const u16 = -1 as i16 as *const u16;
-        let status = load_assembly_and_get_function_pointer(
-            to_wstring("./AppWithPlugin.dll").as_ptr(),
-            to_wstring("AppWithPlugin.Entry, AppWithPlugin").as_ptr(),
-            to_wstring("Main").as_ptr(),
-            UNMANAGEDCALLERSONLY_METHOD,
-            std::ptr::null_mut(),
-            &mut entry_point_func as *mut *mut libc::c_void,
-        );
-        let entry_point_func: *mut EntryPointFn = entry_point_func as *mut EntryPointFn;
-
-        if status != 0 && entry_point_func.is_null() == false {
-            panic!();
-        }
-
         let student_func_ptr = StudentFuncPtr::new();
         let entry_point_func: EntryPointFn = std::mem::transmute(entry_point_func);
 

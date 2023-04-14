@@ -10,3 +10,6 @@ libc = "0.2.33"
 lazy_static = "1.4.0"
 notify = "5.1.0"
 notify-debouncer-mini = { version = "0.2.0" }
+
+[target.'cfg(unix)'.dependencies]
+libloading = "0.8"

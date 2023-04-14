@@ -19,3 +19,4 @@ obj
 Properties
 DotnetRuntime
 .xmake
+.vscode

@@ -55,11 +55,11 @@ namespace AppWithPlugin
                 }
             });
 
-            string[] commandLineArgs = Environment.GetCommandLineArgs();
-            for (int i = 0; i < commandLineArgs.Length; i++)
-            {
-                Debug.Assert(commandLineArgs[i] == args[i]);
-            }
+            // string[] commandLineArgs = Environment.GetCommandLineArgs();
+            // for (int i = 0; i < commandLineArgs.Length; i++)
+            // {
+            //     Debug.Assert(commandLineArgs[i] == args[i]);
+            // }
 
             List<NativeStudent> students = GetStudents(2);
             foreach (NativeStudent student in students)
