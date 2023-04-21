@@ -9,8 +9,10 @@ namespace AppWithPlugin
         private static Locker<Action> sourceFileChangedHandle = new();
 
         [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-        public static void Main(NativeEntryInfo nativeEntryInfo)
+        public static void Main(IntPtr nativeEntryInfoPtr)
         {
+            NativeEntryInfo nativeEntryInfo = Marshal.PtrToStructure<NativeEntryInfo>(nativeEntryInfoPtr);
+
             string[] args = new string[nativeEntryInfo.argsLength];
             for (int i = 0; i < nativeEntryInfo.argsLength; i++)
             {

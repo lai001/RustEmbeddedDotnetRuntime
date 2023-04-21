@@ -2,9 +2,8 @@ extern crate libc;
 use notify::RecursiveMode;
 use notify_debouncer_mini::new_debouncer;
 use rust_embedded_dotnet_runtime::{
-    entry_info::{EntryInfo, EntryPointFn},
+    entry_info::EntryInfo,
     file::{nativeFileWatchSet, FileChangedFunc, GLOBAL_FILE_WATCH},
-    platform::dotnet::{get_entry_point_func, load_hostfxr_library},
     student_func_ptr::StudentFuncPtr,
 };
 use std::{
@@ -85,21 +84,12 @@ fn main() {
         c_args.push(arg as *const u8);
     }
 
-    if !load_hostfxr_library() {
-        panic!();
-    }
-
-    let entry_point_func = get_entry_point_func();
-    unsafe {
-        let student_func_ptr = StudentFuncPtr::new();
-        let entry_point_func: EntryPointFn = std::mem::transmute(entry_point_func);
-
-        let entry_info = EntryInfo {
-            file_watch_set_func_ptr: nativeFileWatchSet as *const libc::c_void,
-            args: c_args.as_ptr(),
-            args_length: c_args.len() as i32,
-            student_func_ptr,
-        };
-        entry_point_func(entry_info);
-    }
+    let student_func_ptr = StudentFuncPtr::new();
+    let mut entry_info = EntryInfo {
+        file_watch_set_func_ptr: nativeFileWatchSet as *const libc::c_void,
+        args: c_args.as_ptr(),
+        args_length: c_args.len() as i32,
+        student_func_ptr,
+    };
+    rs_dotnet::dotnet::initialize((&mut entry_info) as *mut _ as *mut libc::c_void)
 }

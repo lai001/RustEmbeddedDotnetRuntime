@@ -8,5 +8,3 @@ pub struct EntryInfo {
     pub args_length: i32,
     pub student_func_ptr: StudentFuncPtr,
 }
-
-pub type EntryPointFn = unsafe extern "stdcall" fn(entry_info: EntryInfo);

@@ -2,7 +2,7 @@ use super::win::get_func_ptr;
 use super::win::to_wstring;
 use super::win::LoadLibraryW;
 use crate::entry_info::EntryPointFn;
-use crate::platform::windows::global_context::GLOBAL_CONTEXT;
+use crate::windows::global_context::GLOBAL_CONTEXT;
 
 // #[link(name = "./target/debug/nethost")]
 #[link(name = "../../../target/release/nethost")]

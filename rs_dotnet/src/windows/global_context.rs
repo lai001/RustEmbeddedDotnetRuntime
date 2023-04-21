@@ -1,6 +1,6 @@
 use std::sync::Mutex;
 
-use crate::platform::dotnet::{
+use crate::dotnet::{
     HostfxrCloseFn, HostfxrGetRuntimeDelegateFn, HostfxrInitializeForRuntimeConfigFn,
 };
 

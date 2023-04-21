@@ -1,4 +1,3 @@
-pub mod platform;
 pub mod entry_info;
 pub mod file;
 pub mod student;
