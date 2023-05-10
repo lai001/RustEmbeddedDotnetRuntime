@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <EnableDynamicLoading>true</EnableDynamicLoading>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -13,13 +14,5 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <OutputPath>../../rust_embedded_dotnet_runtime/target/release</OutputPath>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Native\Native.csproj" />
-    <ProjectReference Include="..\PluginBase\PluginBase.csproj">
-        <Private>false</Private>
-        <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
-  </ItemGroup>
-
+  
 </Project>

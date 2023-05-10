@@ -1,4 +1,4 @@
-task("project_setup")
+task("setup_project")
     on_run(function ()
         local http = import("net.http")
         local archive = import("utils.archive")
@@ -68,9 +68,9 @@ task("project_setup")
     end)
 
     set_menu {
-        usage = "xmake project_setup",
+        usage = "xmake setup_project",
         description = "Setup project.",
         options = {
-            {nil, "project_setup", "setup", nil, "" },
+            {nil, "setup_project", "setup", nil, "" },
         }
     }

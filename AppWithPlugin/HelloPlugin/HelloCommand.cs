@@ -1,5 +1,7 @@
+using Native;
 using PluginBase;
 using System;
+using System.Collections.Generic;
 
 namespace HelloPlugin
 {
@@ -10,8 +12,24 @@ namespace HelloPlugin
 
         public int Execute()
         {
+            List<NativeStudent> students = GetStudents(2);
+            foreach (NativeStudent student in students)
+            {
+                student.Dispose();
+            }
             Test();
             return 0;
+        }
+
+        private static List<NativeStudent> GetStudents(int number)
+        {
+            List<NativeStudent> students = new();
+            for (var i = 0; i < number; i++)
+            {
+                NativeStudent student = new(i, $"{i}");
+                students.Add(student);
+            }
+            return students;
         }
 
         void Test()

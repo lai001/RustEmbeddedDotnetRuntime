@@ -1,4 +1,5 @@
-﻿using Microsoft.Build.Evaluation;
+﻿using Foundation;
+using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Locator;
@@ -6,7 +7,6 @@ using Microsoft.Build.Logging;
 using PluginBase;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -61,11 +61,7 @@ namespace AppWithPlugin
             //     Debug.Assert(commandLineArgs[i] == args[i]);
             // }
 
-            List<NativeStudent> students = GetStudents(2);
-            foreach (NativeStudent student in students)
-            {
-                student.Dispose();
-            }
+
             MSBuildLocator.RegisterDefaults();
 
             LoadAssembly();
@@ -187,16 +183,6 @@ namespace AppWithPlugin
             }
         }
 
-        private static List<NativeStudent> GetStudents(int number)
-        {
-            List<NativeStudent> students = new();
-            for (var i = 0; i < number; i++)
-            {
-                NativeStudent student = new(i, $"{i}");
-                students.Add(student);
-            }
-            return students;
-        }
     }
 
 }

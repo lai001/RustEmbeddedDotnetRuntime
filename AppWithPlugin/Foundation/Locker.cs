@@ -1,12 +1,12 @@
 using System;
 
-namespace AppWithPlugin
+namespace Foundation
 {
     public class Locker<T>
     {
-        public delegate void ActionRef(ref T item);
+        public delegate void ActionRef(ref T? item);
 
-        private T value = default;
+        private T? value = default;
         private readonly object _object = new();
 
         public Locker()
@@ -27,7 +27,7 @@ namespace AppWithPlugin
             }
         }
 
-        public T Get()
+        public T? Get()
         {
             lock (_object)
             {
@@ -35,7 +35,7 @@ namespace AppWithPlugin
             }
         }
 
-        public void Read(Action<T> closure)
+        public void Read(Action<T?> closure)
         {
             lock (_object)
             {

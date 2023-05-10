@@ -9,30 +9,30 @@ use rust_embedded_dotnet_runtime::{
 use std::{
     ffi::CString,
     path::Path,
-    time::{Duration, SystemTime},
+    time::{Duration/*, SystemTime*/},
 };
 
-fn fib(n: i32) -> i32 {
-    if n <= 0 {
-        return 0;
-    }
-    if n < 3 {
-        return 1;
-    }
-    return fib(n - 1) + fib(n - 2);
-}
+// fn fib(n: i32) -> i32 {
+//     if n <= 0 {
+//         return 0;
+//     }
+//     if n < 3 {
+//         return 1;
+//     }
+//     return fib(n - 1) + fib(n - 2);
+// }
 
-fn test() {
-    let current = SystemTime::now();
-    for i in 0..45 {
-        fib(i);
-    }
-    let duration = SystemTime::now()
-        .duration_since(current)
-        .unwrap()
-        .as_millis();
-    println!("{duration}");
-}
+// fn test() {
+//     let current = SystemTime::now();
+//     for i in 0..45 {
+//         fib(i);
+//     }
+//     let duration = SystemTime::now()
+//         .duration_since(current)
+//         .unwrap()
+//         .as_millis();
+//     println!("{duration}");
+// }
 
 fn main() {
     if let (Ok(current_dir), Ok(current_exe)) = (std::env::current_dir(), std::env::current_exe()) {
@@ -46,7 +46,7 @@ fn main() {
             std::env::set_current_dir(current_exe_dir).unwrap();
         }
     }
-    test();
+    // test();
     {
         std::thread::spawn(|| {
             let (tx, rx) = std::sync::mpsc::channel();

@@ -1,3 +1,5 @@
+using Foundation;
+using Native;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -57,14 +59,4 @@ namespace AppWithPlugin
         public NativeStudentFuncPtr nativeStudentFuncPtr;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    public unsafe struct NativeStudentFuncPtr
-    {
-        public delegate* unmanaged<int, IntPtr, IntPtr> nativeStudentNew;
-        public delegate* unmanaged<IntPtr, void> nativeStudentDelete;
-        public delegate* unmanaged<IntPtr, int, void> nativeStudentSetAge;
-        public delegate* unmanaged<IntPtr, int> nativeStudentGetAge;
-        public delegate* unmanaged<IntPtr, IntPtr, void> nativeStudentSetName;
-        public delegate* unmanaged<IntPtr, IntPtr> nativeStudentGetName;
-    }
 }

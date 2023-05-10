@@ -1,8 +1,19 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace AppWithPlugin
+namespace Native
 {
+    [StructLayout(LayoutKind.Sequential)]
+    public unsafe struct NativeStudentFuncPtr
+    {
+        public delegate* unmanaged<int, IntPtr, IntPtr> nativeStudentNew;
+        public delegate* unmanaged<IntPtr, void> nativeStudentDelete;
+        public delegate* unmanaged<IntPtr, int, void> nativeStudentSetAge;
+        public delegate* unmanaged<IntPtr, int> nativeStudentGetAge;
+        public delegate* unmanaged<IntPtr, IntPtr, void> nativeStudentSetName;
+        public delegate* unmanaged<IntPtr, IntPtr> nativeStudentGetName;
+    }
+
     public unsafe class NativeStudent : IDisposable
     {
         private IntPtr nativeHandle = IntPtr.Zero;
@@ -21,7 +32,7 @@ namespace AppWithPlugin
             get => nativeStudentGetAge(nativeHandle);
         }
 
-        public string Name
+        public string? Name
         {
             set => nativeStudentSetName(nativeHandle, Marshal.StringToBSTR(value));
             get => Marshal.PtrToStringUni(nativeStudentGetName(nativeHandle));

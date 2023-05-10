@@ -1,6 +1,5 @@
-﻿using PluginBase;
-using System;
-using System.Linq;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Loader;
 
@@ -17,10 +16,14 @@ namespace AppWithPlugin
 
         protected override Assembly Load(AssemblyName assemblyName)
         {
-            Assembly[] loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            if (assemblyName.FullName == typeof(ICommand).Assembly.FullName)
+            Dictionary<string, Assembly> loadedAssemblies = new();
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) 
             {
-                return loadedAssemblies.First(assembly => assembly.FullName == assemblyName.FullName);
+                loadedAssemblies[assembly.FullName] = assembly;
+            }
+            if (loadedAssemblies.ContainsKey(assemblyName.FullName))
+            {
+                return loadedAssemblies[assemblyName.FullName];
             }
             string assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
             if (assemblyPath != null)
